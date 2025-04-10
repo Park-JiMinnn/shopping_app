@@ -1,20 +1,25 @@
-import { useRef, useState } from 'react';
-
+// App.tsx
+import { useState, useRef } from "react";
 
 interface ProductType {
   id: number;
   name: string;
   explanation: string;
   price: number;
-}
+};
 
 interface ProductItemProps {
   product: ProductType;
+  onDelete: (id: number) => void;
+  onUpdate: (product: ProductType) => void;
 }
 
-const ProductItem = ({ product }: ProductItemProps) => {
+const ProductItem = ({ product, onDelete, onUpdate }: ProductItemProps) => {
   const { id, name, price, explanation } = product;
   const [isEditMode, setIsEditMode] = useState(false);
+  const [editName, setEditName] = useState(product.name);
+  const [editExplanation, setEditExplanation] = useState(product.explanation);
+  const [editPrice, setEditPrice] = useState(product.price);
 
   return (
     <div>
@@ -23,39 +28,60 @@ const ProductItem = ({ product }: ProductItemProps) => {
       <div>{price}</div>
       <div>{explanation}</div>
 
-      <button type='button' onClick={() =>
-        console.log('삭제하기')}
-      >
+      <button type="button" onClick={() => onDelete(id)}>
         삭제하기
       </button>
 
-      <button type='button' onClick={() =>
-        console.log('수정하기기')}
-      >
-        수정정하기
-      </button>
+      <form onSubmit={(event) => {
+        event.preventDefault();
+        onUpdate({
+          id, 
+          name: editName,
+          price: editPrice,
+          explanation: editExplanation,
+        });
+      }}>
+        <input 
+          type="text" 
+          placeholder="상품 이름" 
+          value={editName}
+          onChange={(event) => setEditName(event.target.value)}
+        />
+        <input 
+          type="text" 
+          placeholder="상품 설명" 
+          value={editExplanation}
+          onChange={(event) => setEditExplanation(event.target.value)}
+        />
+        <input 
+          type="number" 
+          placeholder="상품 가격" 
+          value={editPrice}
+          onChange={(event) => setEditPrice(parseInt(event.target.value))}          
+        />
+        <input type="submit" value="상품 수정하기" />
+      </form>
     </div>
   );
-};
+}
 
 
 function App() {
 
-  const [products, setProducts] = useState<ProductType[]>([
-    {
-      id: 0,
-      name: 'Iphone 13 Max',
-      explanation: '디스플레이는 6.1인치 19.5:9 비율의 2532x1170 해상도를 지원하며 패널 형식은 아몰라방식으 슈퍼어쩌구 디스플레이이다. 인치당 픽셀 수는 몇개이다. 좋은 기능 다 있고 우리 제품 개쩔고',
-      price: 1230000,
-    },
-  ]);
-
+  const [products, setProducts] = useState<ProductType[]>([  
+      {
+        id: 0,
+        name: "Iphone 13 Max",
+        explanation: '디스플레이는 6.1인치 19.5:9 비율의 2532*1170 해상도를 지원하며 패널 형식은 AMOLED 방식의 Super Retina XDR 디스플레이다. 인치당 픽셀 수는 460 ppi이다. 120Hz의 터치 샘플링 레이트를 제공하고 명암비는 2,000,000:1이다',
+        price: 1230000,
+      },
+    ]);
+  
   const [name, setName] = useState('');
   const [explanation, setExplanation] = useState('');
   const [price, setPrice] = useState(0);
-
   const fakeId = useRef(0);
-
+  
   const handleCreate = (newProduct: Omit<ProductType, 'id'>) => {
     fakeId.current += 1;
     setProducts([...products, {
@@ -63,51 +89,57 @@ function App() {
       id: fakeId.current,
     }]);
   };
-
-  return (
-    <>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          handleCreate({
-            name,
-            explanation,
-            price,
-          });
-        }}
-      >
-
-        <input
+  const handleDelete = (id: number) => 
+    setProducts(products.filter((product) => product.id !== id));
+  
+  const handleUpdate = (updateProduct: {
+      id: number;
+      name: string;
+      explanation:  string;
+      price: number;
+    }) => { 
+    setProducts(products.map((product) => (
+      product.id === updateProduct.id ? updateProduct : product
+    )));
+  };
+  
+   return (
+      <>
+        <form 
+          onSubmit={(event) => {
+            event.preventDefault();
+            handleCreate({
+                name,
+                explanation,
+                price,
+              });
+          }}
+        >
+          <input 
           value={name}
           onChange={(event) => setName(event.target.value)}
-          type='text'
-          placeholder='상품 이름'
+          type="text" 
+          placeholder="상품 이름" 
         />
-
-        <input
+        <input 
           value={explanation}
           onChange={(event) => setExplanation(event.target.value)}
-          type='text'
-          placeholder='상품 설명'
+          type="text" 
+          placeholder="상품 설명" 
         />
-
-        <input
+        <input 
           value={price}
-          onChange={(event) => setPrice(parseInt(event.target.value, 10))}
-          type='number'
-          placeholder='상품 가격'
+          onChange={(event) => setPrice(parseInt(event.target.value))}          
+          type="number" 
+          placeholder="상품 가격" 
         />
+        <input type="submit" value="상품 만들기" />
 
-        <input type='submit' value='상품 만들기' />
-      </form>
+    </form>
 
-      {products.map(({ id, name, price, explanation }) => (
-        <div key={id}>
-          <div>{name}</div>
-          <div>{price}</div>
-          <div>{explanation}</div>
-        </div>
-      ))}
+    {products.map((product) => ( 
+      <ProductItem key={product.id} product={product} onDelete={handleDelete} onUpdate={handleUpdate} /> 
+    ))}
     </>
   );
 }

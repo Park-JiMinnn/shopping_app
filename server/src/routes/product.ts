@@ -32,7 +32,7 @@ const upload = multer({
 
 router.patch(
   "/thumbnail/:productId",
-  upload.single("thumbnail"),
+  upload.single("thumbnail") as any,
   productController.updateThumbnailController
 );
 
